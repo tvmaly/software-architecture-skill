@@ -1,0 +1,7 @@
+interface:
+  display_name: "Repo Architecture Walkthrough"
+  short_description: "Generate ARCHITECTURE.md and ARCHITECTURE_DIAGRAMS.md from a repository for humans and AI agents."
+  brand_color: "#3B82F6"
+  default_prompt: "Use $repo-architecture-walkthrough to analyze this repository and create ARCHITECTURE.md and ARCHITECTURE_DIAGRAMS.md."
+policy:
+  allow_implicit_invocation: true
