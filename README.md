@@ -506,15 +506,7 @@ It is a practical tool for making architecture easier to understand before human
 ---
 
 ## License
-
-Choose the license that fits your organization or project.
-
-Common options:
-
-- MIT for broad reuse
 - Apache-2.0 for explicit patent language
-- Internal-only if this is used inside a company
-
 ---
 
 ## Contributing
