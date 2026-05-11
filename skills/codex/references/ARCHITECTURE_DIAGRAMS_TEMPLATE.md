@@ -69,7 +69,36 @@ flowchart LR
 
 Explain whether the current dependency direction appears clean, mixed, or unclear.
 
-## 5. Runtime and Deployment View
+## 5. Boundary and Contract View
+
+Use this when component boundaries, schemas, or public interfaces are important to safe changes.
+
+```mermaid
+flowchart LR
+    Caller[Caller or Workflow] --> Contract[Public Contract]
+    Contract --> Component[Owning Component]
+    Component --> Adapter[Boundary Adapter]
+    Adapter --> External[(External System or Store)]
+```
+
+Explain what the contract is, which component owns it, and which files provide evidence. If contracts are implicit or missing, say that directly.
+
+## 6. AI-Agent Navigation View
+
+Use this when future agents need a concise reading path before editing.
+
+```mermaid
+flowchart TB
+    Context[Context Docs] --> Entry[Entry Points]
+    Entry --> Core[Core Logic]
+    Core --> Tests[Focused Tests]
+    Core --> Contracts[Contracts or Schemas]
+    Core --> Runtime[Runtime Config]
+```
+
+Explain the safest reading order and the verification path. Keep this diagram focused on navigation, not every file in the repository.
+
+## 7. Runtime and Deployment View
 
 Use this when deployment, runtime, or operations are visible in the repo.
 

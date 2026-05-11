@@ -11,6 +11,9 @@ It is designed for:
 - manager/business understanding
 - safer AI-agent navigation
 - human review of AI-assisted codebases
+- evidence-backed architecture improvement suggestions
+
+The skill now includes an opinionated AI-friendly architecture assessment. It looks for boundary clarity, public contracts, dependency direction, side-effect boundaries, context files, generated files, and verification guardrails, then recommends small categorized improvements instead of broad rewrites.
 
 ## Files
 

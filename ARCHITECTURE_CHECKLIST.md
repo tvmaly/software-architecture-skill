@@ -76,7 +76,7 @@ The generated architecture documentation must be treated as a draft until review
 | **How to Navigate the Codebase** | Required | Gives a practical reading order for new developers and reviewers. |
 | **Safe Change Guide for Humans and AI Agents** | Required | Identifies files to read before editing, generated files, approval-required areas, test commands, naming conventions, and boundaries. |
 | **Assumptions and Items Needing Human Validation** | Required | Lists claims that are inferred, uncertain, or dependent on human knowledge. |
-| **Suggested Architecture Improvements** | Required | Recommends practical improvements with senior-developer rationale and manager rationale. May state “No recommendations found” if appropriate. |
+| **Suggested Architecture Improvements** | Required | Recommends practical categorized improvements with senior-developer rationale and manager rationale. May state “No recommendations found” if appropriate. |
 | **Glossary** | Required when terms exist | Defines domain terms, acronyms, internal libraries, service names, and abbreviations. May be brief if the repo has no domain-specific terms. |
 | **Appendix: Evidence Map** | Required | Maps important architectural claims to files, tests, configs, docs, functions, or commands. |
 
@@ -106,6 +106,7 @@ Minimum verification checks should include:
 - Evidence map exists and contains at least one concrete file/config/test reference for non-trivial repositories.
 - Assumptions section exists.
 - Suggested improvements section exists.
+- Suggested improvements table includes a category column when recommendations are listed.
 - Safe-change guidance exists.
 
 Example command:
@@ -896,9 +897,11 @@ List anything that is inferred but not directly proven.
 
 Recommend practical improvements. Favor KISS and YAGNI. Avoid speculative rewrites.
 
-| Recommendation | Evidence | Senior Developer Rationale | Manager Rationale | Effort | Risk | Priority |
-|---|---|---|---|---|---|---|
-| Small change | Files or behavior observed | Why it improves correctness/testability/maintainability | Why it improves predictability/risk/onboarding/cost | S/M/L | Low/Med/High | P1/P2/P3 |
+Every recommendation must be evidence-backed and categorized. Use only these categories: Documentation/context, Boundary/modularity, Contract/schema, Verification/guardrail, Runtime/operations, Security/data safety, Dependency risk.
+
+| Category | Recommendation | Evidence | Senior Developer Rationale | Manager Rationale | Effort | Risk | Priority |
+|---|---|---|---|---|---|---|---|
+| Documentation/context | Small change | Files or behavior observed | Why it improves correctness/testability/maintainability/AI-agent safety | Why it improves predictability/risk/onboarding/cost | S/M/L | Low/Med/High | P1/P2/P3 |
 
 ## 14. Glossary
 
@@ -993,7 +996,36 @@ flowchart LR
 
 Explain whether the current dependency direction appears clean, mixed, or unclear.
 
-## 5. Runtime and Deployment View
+## 5. Boundary and Contract View
+
+Use this when component boundaries, schemas, or public interfaces are important to safe changes.
+
+```mermaid
+flowchart LR
+    Caller[Caller or Workflow] --> Contract[Public Contract]
+    Contract --> Component[Owning Component]
+    Component --> Adapter[Boundary Adapter]
+    Adapter --> External[(External System or Store)]
+```
+
+Explain what the contract is, which component owns it, and which files provide evidence. If contracts are implicit or missing, say that directly.
+
+## 6. AI-Agent Navigation View
+
+Use this when future agents need a concise reading path before editing.
+
+```mermaid
+flowchart TB
+    Context[Context Docs] --> Entry[Entry Points]
+    Entry --> Core[Core Logic]
+    Core --> Tests[Focused Tests]
+    Core --> Contracts[Contracts or Schemas]
+    Core --> Runtime[Runtime Config]
+```
+
+Explain the safest reading order and the verification path. Keep this diagram focused on navigation, not every file in the repository.
+
+## 7. Runtime and Deployment View
 
 Use this when deployment, runtime, or operations are visible in the repo.
 

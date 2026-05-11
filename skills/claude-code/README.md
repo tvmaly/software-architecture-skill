@@ -10,6 +10,9 @@ It is designed for:
 - new developer onboarding
 - manager/business understanding
 - safe AI-agent navigation
+- evidence-backed architecture improvement suggestions
+
+The skill includes an opinionated AI-friendly architecture assessment. It looks for boundary clarity, public contracts, dependency direction, side-effect boundaries, context files, generated files, and verification guardrails, then recommends small categorized improvements instead of broad rewrites.
 
 ## Files
 

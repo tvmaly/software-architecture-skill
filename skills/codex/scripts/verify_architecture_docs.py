@@ -9,9 +9,7 @@ Assumptions:
 
 from __future__ import annotations
 
-import os
 import re
-import sys
 from pathlib import Path
 from typing import Iterable
 
@@ -42,6 +40,9 @@ REQUIRED_DIAGRAM_HEADINGS = [
 
 PATH_LIKE_RE = re.compile(r"`([^`]+)`")
 MERMAID_FENCE_RE = re.compile(r"```mermaid\b|```", re.IGNORECASE)
+
+SECTION_HEADING_RE = re.compile(r"^##\s+(?:\d+\.\s*)?(.+?)\s*$", re.MULTILINE)
+TABLE_LINE_RE = re.compile(r"^\|(.+)\|\s*$", re.MULTILINE)
 
 
 def read_text(path: Path) -> str:
@@ -137,6 +138,87 @@ def check_referenced_paths(markdown: str) -> list[str]:
     return warnings
 
 
+def section_text(markdown: str, heading: str) -> str:
+    wanted = normalize_heading(heading)
+    matches = list(SECTION_HEADING_RE.finditer(markdown))
+    for index, match in enumerate(matches):
+        if normalize_heading(match.group(1)) != wanted:
+            continue
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(markdown)
+        return markdown[start:end].strip()
+    return ""
+
+
+def table_headers(section: str) -> list[list[str]]:
+    headers: list[list[str]] = []
+    for match in TABLE_LINE_RE.finditer(section):
+        cells = [cell.strip() for cell in match.group(1).split("|")]
+        if cells:
+            headers.append(cells)
+    return headers
+
+
+def has_table_header(section: str, required_columns: Iterable[str]) -> bool:
+    required = {normalize_heading(column) for column in required_columns}
+    for header in table_headers(section):
+        normalized = {normalize_heading(column) for column in header}
+        if required.issubset(normalized):
+            return True
+    return False
+
+
+def check_suggested_improvements(markdown: str) -> list[str]:
+    section = section_text(markdown, "Suggested Architecture Improvements")
+    if not section:
+        return ["Suggested Architecture Improvements section is empty or missing."]
+    if "no recommendations" in section.lower():
+        return []
+    required = [
+        "Category",
+        "Recommendation",
+        "Evidence",
+        "Senior Developer Rationale",
+        "Manager Rationale",
+        "Effort",
+        "Risk",
+        "Priority",
+    ]
+    if not has_table_header(section, required):
+        return [
+            "Suggested Architecture Improvements table must include columns: "
+            + ", ".join(required)
+        ]
+    return []
+
+
+def check_safe_change_guidance(markdown: str) -> list[str]:
+    section = section_text(markdown, "Safe Change Guide for Humans and AI Agents")
+    if not section:
+        return ["Safe Change Guide for Humans and AI Agents section is empty or missing."]
+    lowered = section.lower()
+    if "agent" not in lowered and "ai" not in lowered:
+        return ["Safe change guidance should include explicit guidance for AI agents."]
+    return []
+
+
+def check_evidence_map(markdown: str) -> list[str]:
+    section = section_text(markdown, "Appendix: Evidence Map")
+    if not section:
+        return ["Evidence map section is empty or missing."]
+    if "path/to/" in section or "architectural claim" in section.lower():
+        return ["Evidence map still appears to contain template placeholder content."]
+    for match in PATH_LIKE_RE.finditer(section):
+        raw = match.group(1).strip()
+        if not raw or raw in {"ARCHITECTURE.md", "ARCHITECTURE_DIAGRAMS.md"}:
+            continue
+        if looks_like_local_path(raw) and not any(part in raw for part in ("path/to/", "<", ">")):
+            return []
+    if "limited" in section.lower() or "not applicable" in section.lower() or "n/a" in section.lower():
+        return []
+    return ["Evidence map does not include concrete local file/config/test references."]
+
+
 def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
@@ -168,9 +250,12 @@ def main() -> int:
 
     errors.extend(f"ARCHITECTURE.md: {msg}" for msg in check_mermaid_fences(architecture_text))
     errors.extend(f"ARCHITECTURE_DIAGRAMS.md: {msg}" for msg in check_mermaid_fences(diagrams_text))
+    errors.extend(f"ARCHITECTURE.md: {msg}" for msg in check_suggested_improvements(architecture_text))
+    errors.extend(f"ARCHITECTURE.md: {msg}" for msg in check_safe_change_guidance(architecture_text))
 
     warnings.extend(check_referenced_paths(architecture_text))
     warnings.extend(check_referenced_paths(diagrams_text))
+    warnings.extend(f"ARCHITECTURE.md: {msg}" for msg in check_evidence_map(architecture_text))
 
     for warning in warnings:
         print(f"WARNING: {warning}")

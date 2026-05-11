@@ -32,6 +32,8 @@ This skill helps developers:
 - Avoid touching protected or risky areas without approval
 - See how modules, packages, services, and data flows fit together
 - Give AI agents better context before asking them to code
+- Make boundaries, contracts, dependency direction, and verification paths visible
+- Identify small guardrails that make future AI-assisted changes easier to review
 - Reduce review friction by documenting the architecture clearly
 
 A good architecture file is not bureaucracy. It is a map that helps humans and AI agents make smaller, safer, better changes.
@@ -70,6 +72,7 @@ A detailed `ARCHITECTURE.md` helps agents:
 - Respect module boundaries
 - Avoid protected areas
 - Understand dependency direction
+- Understand public contracts, schemas, side-effect boundaries, and generated files
 - Use the correct configuration and integration patterns
 - Add tests in the right places
 - Preserve known design constraints
@@ -93,6 +96,8 @@ They may miss:
 - Which files are generated
 - Which configurations are production-sensitive
 - Which tests are required before a change is safe
+- Which contracts or schemas must remain compatible
+- Which verification guardrails catch architectural drift
 
 When those details are not documented, AI-generated code can look correct while being fundamentally wrong.
 
@@ -116,6 +121,7 @@ Typical sections include:
 - System context
 - Main entry points
 - Major components
+- Boundary clarity and public contracts
 - Core workflows
 - Data flow and persistence
 - Runtime, configuration, and deployment model
@@ -137,6 +143,8 @@ It may include Mermaid diagrams such as:
 - Component/module diagram
 - Request or job workflow diagram
 - Data flow diagram
+- Boundary/contract diagram
+- AI-agent navigation diagram
 - Deployment/runtime diagram
 
 The skill uses judgment. For a tiny single-file script, diagrams may be unnecessary. For a larger repository, diagrams can make the architecture much easier to understand.
@@ -160,6 +168,19 @@ Without one, the agent has to rediscover the system every time. That increases t
 With one, the agent can start from a shared map of the system.
 
 That means better prompts, better plans, better diffs, and easier human review.
+
+## Opinionated AI-Friendly Architecture Assessment
+
+The skills do not try to force every repository into one architecture pattern. Instead, they look for concrete signals that make a codebase easier for humans and AI agents to understand and change safely:
+
+- clear bounded contexts, feature slices, modules, apps, packages, or services
+- explicit public contracts such as schemas, typed DTOs, validators, APIs, CLI interfaces, SQL result shapes, or event payloads
+- intentional dependency direction and visible side-effect boundaries
+- durable context files such as `AGENTS.md`, `CLAUDE.md`, local READMEs, ADRs, specs, and architecture docs
+- generated or protected files that should not be edited casually
+- focused tests, contract tests, architecture/import rules, type checks, linting, CI checks, and other guardrails
+
+Suggested improvements are categorized as Documentation/context, Boundary/modularity, Contract/schema, Verification/guardrail, Runtime/operations, Security/data safety, or Dependency risk. The recommendation style is intentionally incremental: prefer a small enforceable guardrail over a broad rewrite or named architecture pattern.
 
 ---
 
@@ -402,6 +423,7 @@ Pay special attention to:
 - Assumptions
 - Protected areas
 - Suggested improvements
+- Improvement categories and evidence
 - Evidence map
 - Mermaid diagrams
 - Testing gaps
@@ -471,6 +493,17 @@ Clearly mark assumptions and items needing human validation.
 Include suggested architecture improvements near the end of ARCHITECTURE.md, with rationale from both:
 1. a senior developer perspective
 2. an engineering manager perspective
+
+Categorize each improvement as one of:
+- Documentation/context
+- Boundary/modularity
+- Contract/schema
+- Verification/guardrail
+- Runtime/operations
+- Security/data safety
+- Dependency risk
+
+Prefer small, evidence-backed improvements over broad rewrites or named architecture-pattern recommendations.
 ```
 
 ---
@@ -484,6 +517,7 @@ The generated architecture docs should be:
 - Helpful to an AI coding agent
 - Grounded in actual files
 - Explicit about uncertainty
+- Specific about boundaries, contracts, side effects, and verification guardrails
 - Focused on design, not a file-by-file inventory
 - Updated when important architecture changes
 - Honest about risks, gaps, and sharp edges
@@ -522,4 +556,3 @@ Useful improvements include:
 - Better Mermaid diagram patterns
 - More guidance for legacy systems
 - More guidance for regulated environments
-

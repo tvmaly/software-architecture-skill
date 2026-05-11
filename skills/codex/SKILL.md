@@ -40,6 +40,8 @@ The default technology assumptions are Python, SQL, Go, JavaScript, Vue.js, and 
 - Include suggested architecture improvements near the end of `ARCHITECTURE.md`, with rationale from both a senior developer perspective and a manager perspective.
 - Include Mermaid diagrams by default when they add clarity. Use judgment: for a single script file under roughly 200 lines, diagrams may be unnecessary.
 - Do not replace human architectural judgment. Use the architecture docs to make human review easier.
+- Make architecture friendliness for AI agents evidence-based: assess boundaries, contracts, dependency direction, context files, side-effect isolation, test harnesses, and enforceable guardrails before recommending changes.
+- Prefer incremental, reviewable improvements over architectural purity. Do not recommend microservices, Clean Architecture, Hexagonal Architecture, vertical slices, or a framework migration unless repository evidence shows that the smaller local fix is insufficient.
 
 ## Initial interview
 
@@ -70,6 +72,7 @@ Inspect, when present:
 
 - `README*`
 - `AGENTS.md`, `.codex/`, `.agents/skills`, or other agent instructions
+- `CLAUDE.md`, `.claude/`, `.cursor/`, `.cursorrules`, `CONTEXT.md`, `SPEC.md`, `PLAN.md`, `TASKS.md`, or other AI/context/specification files
 - `pyproject.toml`, `setup.py`, `requirements*.txt`, `Pipfile`, `poetry.lock`
 - `package.json`, `vite.config.*`, `vue.config.*`, `webpack.config.*`
 - `go.mod`, `go.sum`
@@ -102,7 +105,34 @@ Identify:
 - test coverage signals
 - operational concerns such as logging, retries, secrets, migrations, release process, and monitoring
 
-### 3. Find the architecture story
+### 3. Assess AI-friendly architecture signals
+
+This is not a purity test. Use it to produce practical, evidence-backed recommendations.
+
+Identify:
+
+- bounded contexts, feature slices, modules, apps, packages, or services with clear ownership
+- unclear boundaries, especially broad `common`, `shared`, `helpers`, `utils`, or cross-cutting modules that hide responsibilities
+- public contracts such as schemas, OpenAPI, Protobuf, GraphQL schemas, typed DTOs, validators, CLI interfaces, SQL result shapes, UI route contracts, event payload definitions, or documented APIs
+- dependency direction and whether it is clean, mixed, circular, or undocumented
+- side-effect boundaries for database access, network calls, file I/O, subprocesses, clock/time, randomness, environment variables, queues, and external services
+- verification guardrails such as fast focused tests, contract tests, architecture/import rules, type checks, linting, CI, snapshot/golden tests, and documented manual checks
+- context layers for future agents, including `AGENTS.md`, `CLAUDE.md`, `.codex/`, `.agents/`, `.cursor/`, local READMEs, ADRs, specifications, and architecture docs
+- generated, vendored, migration, schema, build, and lock files that future agents should not edit casually
+
+When recommending improvements, tie each suggestion to one of these categories:
+
+- Documentation/context
+- Boundary/modularity
+- Contract/schema
+- Verification/guardrail
+- Runtime/operations
+- Security/data safety
+- Dependency risk
+
+Prefer the smallest enforceable improvement, such as documenting a boundary, adding a focused test, introducing an import rule, adding a schema, clarifying an owner, or isolating a visible side effect. Avoid speculative rewrites and avoid adding abstractions before there is evidence of repeated behavior, unsafe coupling, or real volatility.
+
+### 4. Find the architecture story
 
 Explain the repository as a narrative:
 
@@ -113,7 +143,7 @@ Explain the repository as a narrative:
 - What should a manager know about value, risk, and maintainability?
 - What should an AI coding agent know to avoid unsafe edits?
 
-### 4. Assess documentation confidence
+### 5. Assess documentation confidence
 
 For each major claim, classify confidence:
 
@@ -168,6 +198,8 @@ Prefer these diagrams when inferable:
 - component/module diagram
 - request/data-flow diagram
 - dependency direction diagram
+- boundary/contract diagram
+- AI-agent navigation diagram
 - deployment/runtime diagram
 
 For a very small repository, it is acceptable to write:
@@ -186,15 +218,18 @@ When Mermaid is included:
 
 Near the end of `ARCHITECTURE.md`, include suggested changes in a table with these columns:
 
-| Recommendation | Evidence | Senior developer rationale | Manager rationale | Effort | Risk | Priority |
+| Category | Recommendation | Evidence | Senior developer rationale | Manager rationale | Effort | Risk | Priority |
 
 Use this guidance:
 
 - **Senior developer rationale** should focus on correctness, testability, modularity, readability, coupling, observability, operational safety, and future change cost.
 - **Manager rationale** should focus on onboarding speed, delivery predictability, operational risk, bus factor, auditability, support cost, and business continuity.
+- **Category** must be one of: Documentation/context, Boundary/modularity, Contract/schema, Verification/guardrail, Runtime/operations, Security/data safety, or Dependency risk.
 - Keep recommendations practical. Avoid speculative rewrites.
 - Favor KISS and YAGNI. Suggest the smallest change that improves clarity or safety.
 - Separate documentation gaps from code architecture issues.
+- Do not describe a repository as "AI-friendly" or "AI-hostile" without citing concrete evidence.
+- Do not recommend a named architecture pattern as a goal by itself. Recommend specific local changes that reduce ambiguity, coupling, hidden side effects, or verification gaps.
 
 ## AI agent navigation guidance
 
@@ -207,6 +242,8 @@ Include guidance that helps future AI agents operate safely:
 - risky areas where human confirmation is needed
 - domain terms that must be preserved
 - known conventions from the repo
+- context files and local docs future agents should read before editing
+- intended edit scopes and areas where scope expansion must be explained
 - boundaries that should not be crossed casually
 
 ## Verification requirements
@@ -234,7 +271,9 @@ The docs should pass these checks:
 - local file references inside backticks appear to exist when they look like paths.
 - assumptions section exists.
 - suggested improvements section exists.
+- suggested improvements table includes a category column.
 - AI agent safe-change guidance exists.
+- evidence map contains concrete file/config/test references for non-trivial repositories, or the doc explains why evidence is limited.
 
 If the verifier fails, fix the documentation or explain why a warning is acceptable.
 
